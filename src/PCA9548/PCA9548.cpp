@@ -41,12 +41,10 @@ void PCA9548::select( char channel )
 {
     char data = 0x08 | channel;
     int result = i2c.write( i2c_addr, &data, 1 );
-    printf("PCA9548::select: %d\r\n", result);
 }
  
 void PCA9548::disable( void )
 {
     char data = 0x00;
     int result = i2c.write( i2c_addr, &data, 1 );
-    printf("PCA9548::disable: %d\r\n", result);
 }
