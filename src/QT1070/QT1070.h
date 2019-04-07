@@ -16,5 +16,5 @@ class QT1070{
     private:
         //int i2cfile; //geen default constructor
         I2C * i2c;
-        const int i2cAddress = 0x1B<<1;
+        static const int i2cAddress = 0x1B<<1;
 };
