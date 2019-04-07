@@ -15,25 +15,11 @@ char QT1070::get_pressed_key()
 }
 void QT1070::calibrate()
 {
-    char buffer = 0x38;
-    if (i2c->write(i2cAddress, &buffer, 1, 0) != 1)
-    {
-        cout << "Failed to set pointer." << endl;
-    }
-    else
-    {
-        cout << "Calibrate: " << endl;
-    }
+    write_register(56,0xAA);
 }
 void QT1070::write_register(char reg, char value){
-    if (i2c->write(i2cAddress, &reg, 1, 0) != 1){
-        
-    }
-    else{
-        cout << "Failed to set pointer." << endl;
-    }
-    wait(0.5);
-    if (i2c->write(i2cAddress, &value, 1, 0) != 1)
+    char data[] = {reg, value};
+    if (i2c->write(i2cAddress, data, 2, 0) != 1)
     {
     
     }
@@ -51,7 +37,6 @@ char QT1070::read_register(char reg){
     else{
         cout << "Failed to set pointer." << endl;
     }
-    wait(0.5);
     if (i2c->read(i2cAddress, &value, 1, 0) != 1)
     {
     
