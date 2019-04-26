@@ -7,6 +7,7 @@ class QT1070{
     public:
         QT1070(I2C * i2c);
         char get_chip_id();
+        void get_pressed_key(char * val);
         char get_pressed_key();
         void calibrate();
     private:

@@ -9,9 +9,12 @@ char QT1070::get_chip_id()
 {
     return read_register(0x00);
 }
-char QT1070::get_pressed_key()
+void QT1070::get_pressed_key(char * val)
 {
-    return  read_register(0x03);
+    (*val) = read_register(0x03);
+}
+char  QT1070::get_pressed_key(){
+    return read_register(0x03);
 }
 void QT1070::calibrate()
 {
