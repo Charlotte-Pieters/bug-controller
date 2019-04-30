@@ -9,13 +9,13 @@
 #include "DongleManager.h"
 #include <thread>
 #include "button_thread/button_thread.h"
-
 using namespace SimpleLoRaWAN;
 using namespace std;
 Serial pc(SERIAL_TX, SERIAL_RX, 115200); // tx, rx
 
 LedManager leds(PC_8, PC_9, PC_10);
 LedEffects led_effects(&leds);
+
 
 I2C i2c_bus(PC_1, PC_0);
 PCA9548 i2c_switch(i2c_bus);
@@ -58,6 +58,8 @@ int main(void)
 
   getAllDongleIds();
   sendDongles();
+
+  led_effects.blink();
   char t1 = 0, t2 = 0;
   QT1070 direction(&i2c_bus);
   QT1070 *direct = &direction;
@@ -65,15 +67,14 @@ int main(void)
   char *mov_value = &t2;
   led_effects.blink();
   Mutex m, timerMux;
-  Timer t_8, t_2;
-  Button_Thread act(direct, &i2c_switch, 2, act_value, LedManager::LED1, &leds, &m, &timerMux, &t_8);
-  Button_Thread mov(direct, &i2c_switch, 1, mov_value, LedManager::LED2, &leds, &m, &timerMux, &t_8);
+  Timer t_8, t_reset;
+  Button_Thread act(direct, &i2c_switch, 2, act_value, LedManager::LED1, &leds, &m, &timerMux, &t_8, &t_reset);
+  Button_Thread mov(direct, &i2c_switch, 1, mov_value, LedManager::LED2, &leds, &m, &timerMux, &t_8, &t_reset);
   Thread actionThread;
   Thread movementThread;
-
+  Thread resetThread;
   actionThread.start(callback(&act, &Button_Thread::run));
   movementThread.start(callback(&mov, &Button_Thread::run));
-  //led_effects.pingPong();
   while (true)
   {
       if(t_8.read() >= 4){
@@ -89,47 +90,27 @@ int main(void)
         (*act_value) = 0;
         (*mov_value) = 0;
       }
+      if((*act_value) == 16 && (*mov_value) == 1 ){
+        t_reset.start();
+      }
+      else if((*act_value) !=16 && (*mov_value) == 1 ){
+        (*act_value) = 0;
+        (*mov_value) = 0;
+        t_8.stop();
+        t_8.reset();
+      }
+      else{
+        t_reset.stop();
+        t_reset.reset();
+      }
+      if(t_reset.read() >= 3){
+        getAllDongleIds();
+        sendDongles();
+        led_effects.blink();
+        t_reset.stop();
+        t_reset.reset();
+      }
   }
-  /*// Keep the main thread busy
-  while(true){
-    wait(1);
-    //led_effects.blink();
-  }*/
-  /*
-  while(true){
-    int status = buttons.getButtonsStatus();
-    // printf("Key stats: %0X\r\n", status);
-    if(status) {
-      leds.enable(LedManager::LED1);
-    } else {
-      leds.disable(LedManager::LED1);
-    }
-  }
-  */
-  // while(true) {
-  //   if(direction.get_pressed_key()>15){
-  //     dir = 0;
-  //   }
-  //   else{
-  //     dir = direction.get_pressed_key();
-  //   }
-  //   if(action.get_pressed_key() < 16){
-  //     act = 0;
-  //   }
-  //   else{
-  //     act = action.get_pressed_key();
-  //   }
-
-  //   if(dir != 0 || act !=0){
-  //     LoRaMessage message;
-  //     message.addUint8(dir);
-  //     message.addUint8(act);
-  //     node.send(message.getMessage(), message.getLength(), 2);
-  //   }
-  //   pc.printf("Message sent. message: %d en %d\r\n",dir,act);
-
-  //   wait(3);
-  // }
   printf("*** BUG controller END ***\r\n");
   return 0;
 }

@@ -10,10 +10,14 @@ class DongleManager
 
     DongleManager(I2C* i2c, PCA9548* i2c_switch);
 
+    ~DongleManager();
+
     void getDongleId(char* buffer, Dongle dongle);
 
   private:
     PCA9548* i2c_switch;
+
+    EEPROM * eeprom;
 
     static const int DONGLE_ID_SIZE = 8;
 

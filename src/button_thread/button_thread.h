@@ -5,7 +5,7 @@
 
 class Button_Thread{
     public:
-        Button_Thread(QT1070 * qt1070,PCA9548 * i2c_switch, unsigned int i2c_nr, char * value, LedManager::LedNumber lednumber, LedManager * led, Mutex * stdioMutex,Mutex * timerMutex, Timer *t);
+        Button_Thread(QT1070 * qt1070,PCA9548 * i2c_switch, unsigned int i2c_nr, char * value, LedManager::LedNumber lednumber, LedManager * led, Mutex * stdioMutex,Mutex * timerMutex, Timer *t, Timer* t_reset);
     public:
         void run(void);
     private:
@@ -17,6 +17,6 @@ class Button_Thread{
         LedManager::LedNumber lednumber;
         Mutex * stdioMutex;
         Mutex * timerMutex;
-        Timer *t;
+        Timer *t, *t_reset;
 };
 

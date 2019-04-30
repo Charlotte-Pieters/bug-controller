@@ -29,7 +29,7 @@ void EEPROM::write_test(){
 }
 //this method will be used to get the addons of the dongles
 void EEPROM::get_id(char * id, unsigned int aantal){
-    char buffer[2] = {0x1F,0xE0};
+    char buffer[2] = {0x00,0x00};
     if (i2c->write(i2cAddress, buffer, 2, 0) != 2)
     {
         
