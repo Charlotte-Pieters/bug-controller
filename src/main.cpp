@@ -19,8 +19,9 @@ LedEffects led_effects(&leds);
 
 I2C i2c_bus(PC_1, PC_0);
 PCA9548 i2c_switch(i2c_bus);
-ButtonManager buttons(&i2c_bus, &i2c_switch);
+//ButtonManager buttons(&i2c_bus, &i2c_switch);
 DongleManager dongles(&i2c_bus, &i2c_switch);
+QT1070 direction(&i2c_bus);
 
 Node node(keys, pins);
 
@@ -51,6 +52,20 @@ void sendDongles()
 
 int main(void)
 {
+  Mutex mux, timerMux;
+  Timer t_4, t_reset;
+  
+  QT1070 *direct = &direction;
+
+  char  qt_val1= 0, qt_val2 = 0;
+  char *act_value = &qt_val1;
+  char *mov_value = &qt_val2;
+
+  Thread actionThread;
+  Thread movementThread;
+  Button_Thread act(direct, &i2c_switch, 2, act_value, LedManager::LED1, &leds, &mux, &timerMux, &t_4, &t_reset);
+  Button_Thread mov(direct, &i2c_switch, 1, mov_value, LedManager::LED2, &leds, &mux, &timerMux, &t_4, &t_reset);
+  
   pc.printf("*** BUG controller ***\r\n");
 
   led_effects.blink();
@@ -59,54 +74,43 @@ int main(void)
   getAllDongleIds();
   sendDongles();
 
-  led_effects.blink();
-  char t1 = 0, t2 = 0;
-  QT1070 direction(&i2c_bus);
-  QT1070 *direct = &direction;
-  char *act_value = &t1;
-  char *mov_value = &t2;
-  led_effects.blink();
-  Mutex m, timerMux;
-  Timer t_8, t_reset;
-  Button_Thread act(direct, &i2c_switch, 2, act_value, LedManager::LED1, &leds, &m, &timerMux, &t_8, &t_reset);
-  Button_Thread mov(direct, &i2c_switch, 1, mov_value, LedManager::LED2, &leds, &m, &timerMux, &t_8, &t_reset);
-  Thread actionThread;
-  Thread movementThread;
-  Thread resetThread;
   actionThread.start(callback(&act, &Button_Thread::run));
   movementThread.start(callback(&mov, &Button_Thread::run));
   while (true)
   {
-      if(t_8.read() >= 4){
-        m.lock();
+      if(t_4.read() >= 4){
+        mux.lock();
         led_effects.pingPong();
-        m.unlock();
+        mux.unlock();
         LoRaMessage message;
         message.addUint8((*act_value));
         message.addUint8(*mov_value);
         node.send(message.getMessage(), message.getLength(), 2);
-        t_8.stop();
-        t_8.reset();
+        t_4.stop();
+        t_4.reset();
         (*act_value) = 0;
         (*mov_value) = 0;
       }
       if((*act_value) == 16 && (*mov_value) == 1 ){
+        leds.enable(LedManager::LED3);
         t_reset.start();
       }
       else if((*act_value) !=16 && (*mov_value) == 1 ){
         (*act_value) = 0;
         (*mov_value) = 0;
-        t_8.stop();
-        t_8.reset();
+        t_4.stop();
+        t_4.reset();
+        t_reset.stop();
+        t_reset.reset();
       }
       else{
         t_reset.stop();
         t_reset.reset();
+        leds.disable(LedManager::LED3);
       }
       if(t_reset.read() >= 3){
         getAllDongleIds();
         sendDongles();
-        led_effects.blink();
         t_reset.stop();
         t_reset.reset();
       }
