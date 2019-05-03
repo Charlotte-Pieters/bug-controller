@@ -48,7 +48,7 @@ void sendDongles()
       message.addUint8(dongles_data[dongle][id_byte]);
     }
   }
-  node.send(message.getMessage(), message.getLength(), 10);
+  node.send(message.getMessage(), message.getLength(), 1);
 }
 
 int main(void)
@@ -87,7 +87,7 @@ int main(void)
         LoRaMessage message;
         message.addUint8((*act_value));
         message.addUint8(*mov_value);
-        node.send(message.getMessage(), message.getLength(), 20);
+        node.send(message.getMessage(), message.getLength(), 2);
         t_4.stop();
         t_4.reset();
         (*act_value) = 0;
