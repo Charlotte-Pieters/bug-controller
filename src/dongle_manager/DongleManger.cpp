@@ -22,5 +22,6 @@ void DongleManager::getDongleId(char* buffer, Dongle dongle)
 
 void DongleManager::selectDongle(Dongle dongle)
 {
+  printf("Selecting dongle %d\r\n", (int)dongle);
   i2c_switch->select((int) dongle);
 }
