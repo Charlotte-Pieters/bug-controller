@@ -39,7 +39,7 @@ PCA9548::~PCA9548()
  
 void PCA9548::select( char channel )
 {
-    char data = 0x08 | channel;
+    char data = channel;
     int result = i2c.write( i2c_addr, &data, 1 );
 }
  

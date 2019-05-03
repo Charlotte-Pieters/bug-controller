@@ -7,6 +7,7 @@
 #include "LedManager.h"
 #include "LedEffects.h"
 #include "DongleManager.h"
+#include "eeprom/eeprom.h"
 #include <thread>
 #include "button_thread/button_thread.h"
 using namespace SimpleLoRaWAN;
@@ -22,6 +23,7 @@ PCA9548 i2c_switch(i2c_bus);
 //ButtonManager buttons(&i2c_bus, &i2c_switch);
 DongleManager dongles(&i2c_bus, &i2c_switch);
 QT1070 direction(&i2c_bus);
+EEPROM eeprom(&i2c_bus);
 
 Node node(keys, pins);
 
@@ -31,6 +33,7 @@ char dongles_data[DONGLES_COUNT][DONGLE_ID_SIZE] = {0};
 
 void getAllDongleIds()
 {
+  LoRaMessage message;
   dongles.getDongleId(dongles_data[0], DongleManager::DONGLE_1);
   dongles.getDongleId(dongles_data[1], DongleManager::DONGLE_2);
   dongles.getDongleId(dongles_data[2], DongleManager::DONGLE_3);
@@ -47,7 +50,7 @@ void sendDongles()
       message.addUint8(dongles_data[dongle][id_byte]);
     }
   }
-  node.send(message.getMessage(), message.getLength(), 2);
+  node.send(message.getMessage(), message.getLength(), 1);
 }
 
 int main(void)
