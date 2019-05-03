@@ -9,17 +9,18 @@
 #include "DongleManager.h"
 #include <thread>
 #include "button_thread/button_thread.h"
+
 using namespace SimpleLoRaWAN;
 using namespace std;
+
 Serial pc(SERIAL_TX, SERIAL_RX, 115200); // tx, rx
 
 LedManager leds(PC_8, PC_9, PC_10);
 LedEffects led_effects(&leds);
 
-
 I2C i2c_bus(PC_1, PC_0);
 PCA9548 i2c_switch(i2c_bus);
-//ButtonManager buttons(&i2c_bus, &i2c_switch);
+ButtonManager buttons(&i2c_bus, &i2c_switch);
 DongleManager dongles(&i2c_bus, &i2c_switch);
 QT1070 direction(&i2c_bus);
 
@@ -47,7 +48,7 @@ void sendDongles()
       message.addUint8(dongles_data[dongle][id_byte]);
     }
   }
-  node.send(message.getMessage(), message.getLength(), 2);
+  node.send(message.getMessage(), message.getLength(), 10);
 }
 
 int main(void)
@@ -74,6 +75,7 @@ int main(void)
   getAllDongleIds();
   sendDongles();
 
+  wait_ms(2000);
   actionThread.start(callback(&act, &Button_Thread::run));
   movementThread.start(callback(&mov, &Button_Thread::run));
   while (true)
@@ -85,7 +87,7 @@ int main(void)
         LoRaMessage message;
         message.addUint8((*act_value));
         message.addUint8(*mov_value);
-        node.send(message.getMessage(), message.getLength(), 2);
+        node.send(message.getMessage(), message.getLength(), 20);
         t_4.stop();
         t_4.reset();
         (*act_value) = 0;
