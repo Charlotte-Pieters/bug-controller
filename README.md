@@ -103,3 +103,67 @@ To flash an external device you have to remove the two jumpers from CN2.
 
 ### datasheet NUCLEO board
 https://www.st.com/content/ccc/resource/technical/document/user_manual/98/2e/fa/4b/e0/82/43/b7/DM00105823.pdf/files/DM00105823.pdf/jcr:content/translations/en.DM00105823.pdf
+
+## Decoder for the TTN
+
+```js
+function Decoder(bytes, port) {
+  // Decode an uplink message from a buffer
+  // (array) of bytes to an object of fields.
+  var decoded = {};
+
+  if (port == 1 || port == 10) {
+    // Initial hardware description
+    var id = "";
+    var addon1 = "";
+    var addon2 = "";
+    var addon3 = "";
+
+    for (var i = 0; i < 8; i++) { 
+      id += bytes[i];
+      addon1 += bytes[i+8];
+      addon2 += bytes[i+16];
+      addon3 += bytes[i+24];
+    }
+
+    decoded = { 
+      id: id ,
+      add_1: addon1,
+      add_2: addon2,
+      add_3: addon3
+    };
+  } else if (port == 2 | port == 20) {
+    var movement = "Idle";
+    var action = "Idle";
+    var select = false;
+    var start = false;
+
+    if (bytes[1] == 2) { movement = "left" }
+    else if (bytes[1] == 8) { movement = "forward" }
+    else if (bytes[1] == 16) { movement = "right" }
+    else if (bytes[1] == 4) { movement = "backwards" }
+    else if (bytes[1] == 1) { select = true }
+
+    if (bytes[0]==1){action = "X"}
+    else if (bytes[0]==2){action = "A"}
+    else if (bytes[0]==8){action = "B"}
+    else if (bytes[0]==4){action = "Y"}
+    else if (bytes[0]==16){ start = true }
+
+    if (select || start) {
+      decoded = {
+        select: (select ? "ON" : "OFF" ),
+        start: (start ? "ON" : "OFF" )
+      }
+    } else {
+      decoded = {
+        movement: movement,
+        action: action
+      }
+    }
+
+  }
+
+  return decoded;
+}
+```
